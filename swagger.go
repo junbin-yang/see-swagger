@@ -153,9 +153,8 @@ func CustomWrapHandler(config *Config, handler *webdav.Handler) see.HandlerFunc 
 		case "doc.json":
 			doc, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
-				c.Status(http.StatusInternalServerError)
-				c.Writer.WriteHeaderNow()
 				c.Abort()
+				c.Status(http.StatusInternalServerError)
 
 				return
 			}
