@@ -121,7 +121,7 @@ func CustomWrapHandler(config *Config, handler *webdav.Handler) see.HandlerFunc 
 	var rexp = regexp.MustCompile(`(.*)(index\.html|doc\.json|favicon-16x16\.png|favicon-32x32\.png|/oauth2-redirect\.html|swagger-ui\.css|swagger-ui\.css\.map|swagger-ui\.js|swagger-ui\.js\.map|swagger-ui-bundle\.js|swagger-ui-bundle\.js\.map|swagger-ui-standalone-preset\.js|swagger-ui-standalone-preset\.js\.map)[\?|.]*`)
 
 	return func(c *see.Context) {
-		matches := rexp.FindStringSubmatch(c.Request.RequestURI)
+		matches := rexp.FindStringSubmatch(c.RequestURI)
 
 		if len(matches) != 3 {
 			c.Status(http.StatusNotFound)
@@ -136,15 +136,15 @@ func CustomWrapHandler(config *Config, handler *webdav.Handler) see.HandlerFunc 
 
 		switch filepath.Ext(path) {
 		case ".html":
-			c.Header("Content-Type", "text/html; charset=utf-8")
+			c.SetHeader("Content-Type", "text/html; charset=utf-8")
 		case ".css":
-			c.Header("Content-Type", "text/css; charset=utf-8")
+			c.SetHeader("Content-Type", "text/css; charset=utf-8")
 		case ".js":
-			c.Header("Content-Type", "application/javascript")
+			c.SetHeader("Content-Type", "application/javascript")
 		case ".png":
-			c.Header("Content-Type", "image/png")
+			c.SetHeader("Content-Type", "image/png")
 		case ".json":
-			c.Header("Content-Type", "application/json; charset=utf-8")
+			c.SetHeader("Content-Type", "application/json; charset=utf-8")
 		}
 
 		switch path {
@@ -153,13 +153,15 @@ func CustomWrapHandler(config *Config, handler *webdav.Handler) see.HandlerFunc 
 		case "doc.json":
 			doc, err := swag.ReadDoc(config.InstanceName)
 			if err != nil {
-				c.AbortWithStatus(http.StatusInternalServerError)
+				c.Status(http.StatusInternalServerError)
+				c.Writer.WriteHeaderNow()
+				c.Abort()
 
 				return
 			}
 			_, _ = c.Writer.Write([]byte(doc))
 		default:
-			handler.ServeHTTP(c.Writer, c.Request)
+			handler.ServeHTTP(c.Writer, c.Req)
 		}
 	}
 }
